@@ -10,7 +10,7 @@ import java.util.List;
 public class TextSearcher {
 
   private TextTokenizer lexer;
-  private String wordRegex = "[a-zA-Z0-9]+\'?[a-zA-Z0-9]+";
+  private String wordRegex = "[a-zA-Z0-9\']+";
   private List<String> tokens;
 
   /**
@@ -63,7 +63,7 @@ public class TextSearcher {
     List<Integer> indexes = new ArrayList<Integer>();
     for (int i = 0; i < this.tokens.size(); i++) {
       String token = this.tokens.get(i).toLowerCase();
-      if (token.equals(lowerCaseQuery)) {
+      if (token.contains(lowerCaseQuery)) {
         indexes.add(i);
       }
     }
