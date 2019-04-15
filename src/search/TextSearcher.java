@@ -15,7 +15,7 @@ public class TextSearcher {
   private TextTokenizer lexer;
   private String wordRegex = "[a-zA-Z0-9\']+";
   private List<String> tokens;
-  /** Cache structure { "queryWord1": [10, 32 ] } */
+  /** Cache structure { "queryWord1": [10, 32] } */
   private JSONObject cache;
 
   /**
@@ -50,7 +50,6 @@ public class TextSearcher {
     this.lexer = new TextTokenizer(fileContents, wordRegex);
     this.tokens = new ArrayList<String>();
     this.cache = new JSONObject();
-    ;
 
     while (this.lexer.hasNext()) {
       this.tokens.add(lexer.next());
@@ -107,7 +106,6 @@ public class TextSearcher {
     // Check cache first
     Integer[] indexes;
     if (cache.has(queryWord)) {
-      System.out.println("cache exist");
       JSONArray indexArray = cache.getJSONArray(queryWord);
       indexes = new Integer[indexArray.length()];
       for (int i = 0; i < indexArray.length(); i++) {
@@ -121,8 +119,6 @@ public class TextSearcher {
       }
       cache.put(queryWord, indexArray);
     }
-
-    System.out.println(Arrays.toString(indexes));
 
     List<String> results = new ArrayList<String>();
     for (int index : indexes) {
