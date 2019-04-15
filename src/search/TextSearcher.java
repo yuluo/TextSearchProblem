@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -132,6 +131,7 @@ public class TextSearcher {
     return (String[]) results.toArray(new String[results.size()]);
   }
 
+  /*
   public static void main(String[] args) throws Exception {
     File file = new File("files/short_excerpt.txt");
     TextSearcher searcher = new TextSearcher(file);
@@ -143,6 +143,7 @@ public class TextSearcher {
 
     System.out.println("end");
   }
+  */
 }
 
 // Any needed utility classes can just go in this file
