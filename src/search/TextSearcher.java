@@ -5,8 +5,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -14,6 +14,7 @@ public class TextSearcher {
 
   private TextTokenizer lexer;
   private String wordRegex = "[a-zA-Z0-9\']+";
+  private int chunkSize = 1000;
   private List<String> tokens;
   /** Cache structure { "queryWord1": [10, 32] } */
   private JSONObject cache;
@@ -57,7 +58,7 @@ public class TextSearcher {
   }
 
   /** find all the index of the queryword */
-  protected Integer[] findIndex(String queryWord) {
+  protected List<Integer> findIndex(String queryWord) {
     String lowerCaseQuery = queryWord.toLowerCase();
     List<Integer> indexes = new ArrayList<Integer>();
     for (int i = 0; i < this.tokens.size(); i++) {
@@ -67,7 +68,7 @@ public class TextSearcher {
       }
     }
 
-    return (Integer[]) indexes.toArray(new Integer[indexes.size()]);
+    return indexes;
   }
 
   protected String getContextWords(int index, int num) {
@@ -102,26 +103,39 @@ public class TextSearcher {
    * @param contextWords The number of words of context to provide on each side of the query word.
    * @return One context string for each time the query word appears in the file.
    */
-  public String[] search(String queryWord, int contextWords) {
+  public String[] search(String queryWord, int contextWords) throws Exception {
     // Check cache first
-    Integer[] indexes;
+    List<Integer> indexes = new ArrayList<Integer>();
     if (cache.has(queryWord)) {
       JSONArray indexArray = cache.getJSONArray(queryWord);
-      indexes = new Integer[indexArray.length()];
       for (int i = 0; i < indexArray.length(); i++) {
-        indexes[i] = indexArray.getInt(i);
+        indexes.add(indexArray.getInt(i));
       }
     } else {
-      indexes = findIndex(queryWord);
+      // indexes = findIndex(queryWord);
+
+      int numOfThreads = (int) Math.ceil((double) this.tokens.size() / this.chunkSize);
+      System.out.println(numOfThreads);
+
+      ExecutorService es = Executors.newCachedThreadPool();
+      int start = 0;
+      for (int i = 0; i < numOfThreads; i++) {
+        es.execute(new TextSearchThread(tokens, indexes, queryWord, start, start + this.chunkSize));
+        start += this.chunkSize;
+      }
+      es.shutdown();
+      es.awaitTermination(1, TimeUnit.MINUTES);
+
       JSONArray indexArray = new JSONArray();
       for (int index : indexes) {
         indexArray.put(index);
       }
       cache.put(queryWord, indexArray);
     }
-
+    System.out.println("Indexes");
     List<String> results = new ArrayList<String>();
     for (int index : indexes) {
+      System.out.println(index);
       String context =
           getContextWords(index, contextWords * -1)
               + this.tokens.get(index)
@@ -133,15 +147,18 @@ public class TextSearcher {
   }
 
   public static void main(String[] args) throws Exception {
-    File file = new File("files/short_excerpt.txt");
+    File file = new File("files/long_excerpt.txt");
     TextSearcher searcher = new TextSearcher(file);
-    String[] results = searcher.search("Naturalists", 1);
-    results = searcher.search("Naturalists", 2);
+
+    long startTime = System.nanoTime();
+    String[] results = searcher.search("geological", 3);
+    long endTime = System.nanoTime();
+    long duration = (endTime - startTime);
+    System.out.println("duration: " + duration);
+
     for (String result : results) {
       System.out.println(result);
     }
-
-    System.out.println("end");
   }
 }
 
