@@ -191,6 +191,20 @@ public class TextSearcherTest {
     Assert.assertEquals(0, results.length);
   }
 
+  @Test
+  public void testCacheHits() throws Exception {
+    String[] expected;
+    expected =
+        new String[] {"majority of naturalists believed that", "Some few naturalists, on the"};
+
+    File file = new File("files/short_excerpt.txt");
+    TextSearcher searcher = new TextSearcher(file);
+    String[] results = searcher.search("naturalists", 1);
+    results = searcher.search("naturalists", 2);
+
+    assertArraysEqual(expected, results);
+  }
+
   /** Verify the tokenizer. This should always pass. */
   @Test
   public void testTokenizer() throws Exception {

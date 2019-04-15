@@ -5,13 +5,18 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class TextSearcher {
 
   private TextTokenizer lexer;
   private String wordRegex = "[a-zA-Z0-9\']+";
   private List<String> tokens;
+  /** Cache structure { "queryWord1": [10, 32 ] } */
+  private JSONObject cache;
 
   /**
    * Initializes the text searcher with the contents of a text file. The current implementation just
@@ -42,19 +47,14 @@ public class TextSearcher {
    */
   protected void init(String fileContents) {
     // TODO -- fill in implementation
-    System.out.println(fileContents);
     this.lexer = new TextTokenizer(fileContents, wordRegex);
     this.tokens = new ArrayList<String>();
+    this.cache = new JSONObject();
+    ;
 
     while (this.lexer.hasNext()) {
       this.tokens.add(lexer.next());
     }
-
-    /*
-       for (String token : tokens) {
-         System.out.println(token);
-    }
-    */
   }
 
   /** find all the index of the queryword */
@@ -104,11 +104,28 @@ public class TextSearcher {
    * @return One context string for each time the query word appears in the file.
    */
   public String[] search(String queryWord, int contextWords) {
-    // TODO -- fill in implementation
-    Integer[] indexes = findIndex(queryWord);
+    // Check cache first
+    Integer[] indexes;
+    if (cache.has(queryWord)) {
+      System.out.println("cache exist");
+      JSONArray indexArray = cache.getJSONArray(queryWord);
+      indexes = new Integer[indexArray.length()];
+      for (int i = 0; i < indexArray.length(); i++) {
+        indexes[i] = indexArray.getInt(i);
+      }
+    } else {
+      indexes = findIndex(queryWord);
+      JSONArray indexArray = new JSONArray();
+      for (int index : indexes) {
+        indexArray.put(index);
+      }
+      cache.put(queryWord, indexArray);
+    }
+
+    System.out.println(Arrays.toString(indexes));
+
     List<String> results = new ArrayList<String>();
     for (int index : indexes) {
-      System.out.println(index);
       String context =
           getContextWords(index, contextWords * -1)
               + this.tokens.get(index)
@@ -123,7 +140,7 @@ public class TextSearcher {
     File file = new File("files/short_excerpt.txt");
     TextSearcher searcher = new TextSearcher(file);
     String[] results = searcher.search("Naturalists", 1);
-
+    results = searcher.search("Naturalists", 2);
     for (String result : results) {
       System.out.println(result);
     }
