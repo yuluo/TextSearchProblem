@@ -69,6 +69,9 @@ public class TextSearcher {
     return (Integer[]) indexes.toArray(new Integer[indexes.size()]);
   }
 
+  /**
+   * get context around the index
+   */
   protected String getContextWords(int index, int num) {
     int numOfContext = 0;
     int direction = num > 0 ? 1 : -1;
